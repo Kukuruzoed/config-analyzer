@@ -31,6 +31,10 @@ func ParseReader(r io.Reader) (Config, error) {
 	return parse(data)
 }
 
+func ParseString(content string) (config.Config, error) {
+	return parse([]byte(content))
+}
+
 func parse(data []byte) (Config, error) {
 	var result Config
 

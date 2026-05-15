@@ -7,12 +7,13 @@ import (
 	"github.com/Kukuruzoed/config-analyzer/internal/analyzer"
 	"github.com/Kukuruzoed/config-analyzer/internal/parser"
 	"github.com/Kukuruzoed/config-analyzer/internal/rules"
+	"github.com/Kukuruzoed/config-analyzer/internal/server"
 	"github.com/spf13/cobra"
 )
 
 func main() {
-	var silent bool
-	var fromStdin bool
+	var silent, fromStdin, serve bool
+	var port int
 
 	cmd := &cobra.Command{
 		Use:   "config-analyzer [file]",
@@ -21,20 +22,33 @@ func main() {
 			var config map[string]any
 			var err error
 
+			var analyzer = analyzer.New(analyzer.DefaultRules())
+
+			if serve {
+				srv := server.New(analyzer, port)
+				return srv.Run() // блокирует до остановки
+			}
+
 			if fromStdin {
 				config, err = parser.ParseReader(os.Stdin)
 			} else {
 				if len(args) == 0 {
 					return fmt.Errorf("Необходимо указать путь к файлу")
 				}
-				config, err = parser.ParseFile(args[0])
-			}
+				var filePath = args[0]
 
-			if err != nil {
-				return err
-			}
+				_, err := os.Stat(filePath)
 
-			var analyzer = analyzer.New(analyzer.DefaultRules())
+				if err != nil {
+					return err
+				}
+
+				config, err = parser.ParseFile(filePath)
+
+				if err != nil {
+					return err
+				}
+			}
 
 			var issues = analyzer.Analyze(config)
 
@@ -43,6 +57,9 @@ func main() {
 			return nil
 		},
 	}
+
+	cmd.Flags().BoolVar(&serve, "serve", false, "запустить HTTP-сервер")
+	cmd.Flags().IntVar(&port, "port", 8080, "порт HTTP-сервера")
 
 	cmd.Flags().BoolVarP(&silent, "silent", "s", false, "Не выходить с ошибкой")
 	cmd.Flags().BoolVar(&fromStdin, "stdin", false, "Читать из stdin")
