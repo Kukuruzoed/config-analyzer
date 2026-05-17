@@ -31,5 +31,6 @@ func DefaultRules() []Rule {
 		rules.OpenBindRule{},
 		rules.PlainPasswordRule{},
 		rules.WeakAlgorithmRule{},
+		rules.TLSRule{},
 	}
 }

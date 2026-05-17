@@ -38,7 +38,6 @@ func (r TLSRule) Check(config Config) []Issue {
 		}
 	}
 
-	// случай 2: verify/insecure отключена проверка сертификата
 	for _, key := range []string{"verify", "tls_verify", "ssl_verify"} {
 		found, values := config.FindByKey(key)
 		if !found {
